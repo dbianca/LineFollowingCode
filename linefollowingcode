@@ -84,6 +84,7 @@ const int ci_Left_Motor_Offset_Address_H = 13;
 const int ci_Right_Motor_Offset_Address_L = 14;
 const int ci_Right_Motor_Offset_Address_H = 15;
 
+
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
 const int ci_Right_Motor_Stop = 1500;
 const int ci_Grip_Motor_Open = 140;         // Experiment to determine appropriate value
@@ -104,11 +105,12 @@ unsigned long ul_Echo_Time;
 unsigned int ui_Left_Line_Tracker_Data;
 unsigned int ui_Middle_Line_Tracker_Data;
 unsigned int ui_Right_Line_Tracker_Data;
-unsigned int ui_Motors_Speed = 1900;        // Default run speed
+unsigned int ui_Motors_Speed = 1700;        // Default run speed
 unsigned int ui_Left_Motor_Speed;
 unsigned int ui_Right_Motor_Speed;
 long l_Left_Motor_Position;
 long l_Right_Motor_Position;
+int stageCounter =0;
 
 unsigned long ul_3_Second_timer = 0;
 unsigned long ul_Display_Time;
@@ -286,36 +288,39 @@ void loop()
        // set motor speeds
         ui_Left_Motor_Speed = constrain(ui_Motors_Speed + ui_Left_Motor_Offset, 1600, 2100);
         ui_Right_Motor_Speed = constrain(ui_Motors_Speed + ui_Right_Motor_Offset, 1600, 2100);
-
-        
      
+    left = !digitalRead(ci_Left_Line_Tracker);
+    right = !digitalRead(ci_Right_Line_Tracker);
+    middle = !digitalRead(ci_Middle_Line_Tracker);
 
+    
        if ((ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)) && (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)) && (ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)))
          {
-         ui_Left_Motor_Speed = constrain(ui_Motors_Speed + ui_Left_Motor_Offset, 1600, 2100) - 250;
-         ui_Right_Motor_Speed = constrain(ui_Motors_Speed + ui_Right_Motor_Offset, 1600, 2100) - 250;
+          
+         right = 1600;
+         left = 1600;
          }
 
          else if ((ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)) && (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)))
          {
-          ui_Left_Motor_Speed -= 45;
-          ui_Right_Motor_Speed += 25;
+          ui_Left_Motor_Speed -= 10;
+          ui_Right_Motor_Speed += 5;
          }
 
          else if ((ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)) && (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)))
          {
-          ui_Right_Motor_Speed -= 45;
-          ui_Left_Motor_Speed += 25;
+          ui_Right_Motor_Speed -= 10;
+          ui_Left_Motor_Speed += 5;
          }
          else if ((ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)))
          {
           ui_Right_Motor_Speed = 0;
-          ui_Left_Motor_Speed += 25;
+          ui_Left_Motor_Speed += 5;
          }        
           else if ((ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)))
          {
           ui_Left_Motor_Speed = 0;
-          ui_Right_Motor_Speed += 25;
+          ui_Right_Motor_Speed += 5;
          }        
          else if (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ui_Line_Tracker_Tolerance))
          {
@@ -323,13 +328,20 @@ void loop()
          ui_Right_Motor_Speed = constrain(ui_Motors_Speed + ui_Right_Motor_Offset, 1600, 2100) - 250;
          }
 
-         else {
-          ui_Left_Motor_Speed = 0;
+         else if ((ui_Right_Line_Tracker_Data > (ui_Right_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)) && (ui_Left_Line_Tracker_Data > (ui_Left_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)) && (ui_Middle_Line_Tracker_Data > (ui_Middle_Line_Tracker_Dark - ui_Line_Tracker_Tolerance)))
+          {
+          if ((stageCounter == 0) || (stageCounter ==3)){
+          ui_Left_Motor_Speed += 5;
           ui_Right_Motor_Speed = 0;
-         }
-
-
-        
+          stageCounter++;
+          }
+          else if((stageCounter ==1) || (stageCounter ==2)){
+          ui_Left_Motor_Speed = 0;
+          ui_Right_Motor_Speed += 5;
+          stageCounter++;
+          }
+          }
+          
 
         if(bt_Motors_Enabled)
         {
@@ -354,7 +366,7 @@ void loop()
         ui_Mode_Indicator_Index = 1;
       }
       break;
-    } 
+    }
     
     case 2:    //Calibrate line tracker light levels after 3 seconds
     {
